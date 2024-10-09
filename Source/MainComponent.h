@@ -27,6 +27,10 @@ private:
     //==============================================================================
     // Your private member variables go here...
 
+    juce::MidiKeyboardState keyboardState;
+    
+    juce::MidiKeyboardComponent keyboardComponent;
+    
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

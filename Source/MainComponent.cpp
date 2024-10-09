@@ -2,6 +2,7 @@
 
 //==============================================================================
 MainComponent::MainComponent()
+    : keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Make sure you set the size of the component after
     // you add any child components.
@@ -19,11 +20,12 @@ MainComponent::MainComponent()
         // Specify the number of input and output channels that we want to open
         setAudioChannels (2, 2);
     }
+    
+    addAndMakeVisible(keyboardComponent);
 }
 
 MainComponent::~MainComponent()
 {
-    // This shuts down the audio device and clears the audio source.
     shutdownAudio();
 }
 
@@ -69,7 +71,5 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    // This is called when the MainContentComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    keyboardComponent.setBounds(10, getHeight() - getHeight() * 0.2, getWidth() - 20, getHeight() * 0.2);
 }
