@@ -24,13 +24,21 @@ public:
     void resized() override;
 
 private:
-    //==============================================================================
-    // Your private member variables go here...
+    
+    void Init();
+    
+    void InitUI();
 
+#pragma region Keyboard
     juce::MidiKeyboardState keyboardState;
-    
     juce::MidiKeyboardComponent keyboardComponent;
+#pragma endregion
     
+#pragma region MIDI
+    juce::ComboBox midiInputsList;
+    juce::Label midiInputListLabel;
+    int lastInputIndex;
+#pragma endregion
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

@@ -1,14 +1,25 @@
 #include "MainComponent.h"
 
-//==============================================================================
+using namespace juce;
+
 MainComponent::MainComponent()
     : keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
+{
+    Init();
+}
+
+MainComponent::~MainComponent()
+{
+    shutdownAudio();
+}
+
+void MainComponent::Init()
 {
     // Make sure you set the size of the component after
     // you add any child components.
     setSize (800, 600);
 
-    // Some platforms require permissions to open input channels so request that here
+    /*// Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
         && ! juce::RuntimePermissions::isGranted (juce::RuntimePermissions::recordAudio))
     {
@@ -19,14 +30,33 @@ MainComponent::MainComponent()
     {
         // Specify the number of input and output channels that we want to open
         setAudioChannels (2, 2);
-    }
+    }*/
     
     addAndMakeVisible(keyboardComponent);
+    
+    InitUI();
 }
 
-MainComponent::~MainComponent()
+void MainComponent::InitUI()
 {
-    shutdownAudio();
+    // Configure UI
+    addAndMakeVisible(midiInputListLabel);
+    midiInputListLabel.setText("MIDI Input: ", dontSendNotification);
+    midiInputListLabel.attachToComponent(&midiInputsList, true);
+    
+    Array<String> midiInputsNames;
+    
+    const Array<MidiDeviceInfo>& midiInputs = juce::MidiInput::getAvailableDevices();
+    for (const MidiDeviceInfo& midiInput : midiInputs)
+    {
+        midiInputsNames.add(midiInput.name);
+    }
+    
+    midiInputsList.addItemList(midiInputsNames, 1);
+    //midiInputList.onChange = [](){/* set midi input */};
+    
+    addAndMakeVisible(midiInputsList);
+    midiInputsList.setTextWhenNoChoicesAvailable("No Midi Inputs Enabled");
 }
 
 //==============================================================================
@@ -72,4 +102,5 @@ void MainComponent::paint (juce::Graphics& g)
 void MainComponent::resized()
 {
     keyboardComponent.setBounds(10, getHeight() - getHeight() * 0.2, getWidth() - 20, getHeight() * 0.2);
+    midiInputsList.setBounds (100, 10, getWidth() * 0.5, 30);
 }
