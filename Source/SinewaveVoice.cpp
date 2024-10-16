@@ -10,6 +10,9 @@
 
 #include "SinewaveVoice.h"
 
+using namespace juce;
+using namespace std;
+
 SinewaveVoice::SinewaveVoice()
 {
     currentAngle = 0.0;
@@ -18,23 +21,23 @@ SinewaveVoice::SinewaveVoice()
     tailOff = 0.0;
 }
 
-bool SinewaveVoice::canPlaySound(juce::SynthesiserSound* sound)
+bool SinewaveVoice::canPlaySound(SynthesiserSound* sound)
 {
     return dynamic_cast<SinewaveSound*> (sound) != nullptr;
 }
 
-void SinewaveVoice::startNote(const int midiNoteNumber, const float velocity, juce::SynthesiserSound* sound, int wheelPitchPosition) 
+void SinewaveVoice::startNote(const int midiNoteNumber, const float velocity, SynthesiserSound* sound, int wheelPitchPosition)
 {
     // Make start the sine from the beginning in (0, 0)
     currentAngle = 0.0;
     level = velocity * 0.25;
     tailOff = 0.0;
     
-    double cyclesPerSecond = juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber);
+    double cyclesPerSecond = MidiMessage::getMidiNoteInHertz(midiNoteNumber);
     double cyclesPerSample = cyclesPerSecond / getSampleRate();
     
     // Compute the distance between two following points on the wave
-    angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
+    angleDelta = cyclesPerSample * 2.0 * MathConstants<double>::pi;
 }
 
 void SinewaveVoice::stopNote(const float velocity, const bool bAllowTailOff)

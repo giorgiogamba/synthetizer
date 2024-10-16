@@ -14,16 +14,18 @@
 
 #include "SinewaveSound.h"
 
-class SinewaveVoice : public juce::SynthesiserVoice
+using namespace juce;
+
+class SinewaveVoice : public SynthesiserVoice
 {
     
 public:
     
     SinewaveVoice();
     
-    bool canPlaySound(juce::SynthesiserSound* sound) override;
+    bool canPlaySound(SynthesiserSound* sound) override;
     
-    void startNote(const int midiNoteNumber, const float velocity, juce::SynthesiserSound* sound, int wheelPitchPosition) override;
+    void startNote(const int midiNoteNumber, const float velocity, SynthesiserSound* sound, int wheelPitchPosition) override;
     void stopNote(const float velocity, const bool bAllowTailOff) override;
     
     // #TODO implement render next block
