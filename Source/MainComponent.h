@@ -9,35 +9,55 @@
 */
 class MainComponent  : public juce::AudioAppComponent
 {
+
+#pragma region Lifecycle
+    
 public:
-    //==============================================================================
+    
     MainComponent();
     ~MainComponent() override;
-
-    //==============================================================================
-    void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) override;
-    void releaseResources() override;
-
-    //==============================================================================
-    void paint (juce::Graphics& g) override;
-    void resized() override;
-
+    
 private:
     
     void Init();
     
+#pragma endregion
+    
+#pragma region Audio
+
+    void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
+    void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) override;
+    void releaseResources() override;
+    
+#pragma endregion
+    
+#pragma region GUI
+
+public:
+    
+    void paint (juce::Graphics& g) override;
+    
+    void resized() override;
+
+private:
+    
     void InitUI();
+    
+#pragma endregion
 
 #pragma region Keyboard
+    
     juce::MidiKeyboardState keyboardState;
     juce::MidiKeyboardComponent keyboardComponent;
+
 #pragma endregion
     
 #pragma region MIDI
+
     juce::ComboBox midiInputsList;
     juce::Label midiInputListLabel;
     int lastInputIndex;
+
 #pragma endregion
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

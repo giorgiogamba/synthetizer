@@ -2,6 +2,8 @@
 
 using namespace juce;
 
+#pragma region Lifecycle
+
 MainComponent::MainComponent()
     : keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
@@ -37,29 +39,10 @@ void MainComponent::Init()
     InitUI();
 }
 
-void MainComponent::InitUI()
-{
-    // Configure UI
-    addAndMakeVisible(midiInputListLabel);
-    midiInputListLabel.setText("MIDI Input: ", dontSendNotification);
-    midiInputListLabel.attachToComponent(&midiInputsList, true);
-    
-    Array<String> midiInputsNames;
-    
-    const Array<MidiDeviceInfo>& midiInputs = juce::MidiInput::getAvailableDevices();
-    for (const MidiDeviceInfo& midiInput : midiInputs)
-    {
-        midiInputsNames.add(midiInput.name);
-    }
-    
-    midiInputsList.addItemList(midiInputsNames, 1);
-    //midiInputList.onChange = [](){/* set midi input */};
-    
-    addAndMakeVisible(midiInputsList);
-    midiInputsList.setTextWhenNoChoicesAvailable("No Midi Inputs Enabled");
-}
+#pragma endregion
 
-//==============================================================================
+#pragma region Audio
+
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     // This function will be called when the audio device is started, or when
@@ -90,7 +73,10 @@ void MainComponent::releaseResources()
     // For more details, see the help for AudioProcessor::releaseResources()
 }
 
-//==============================================================================
+#pragma endregion
+
+#pragma region GUI
+
 void MainComponent::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
@@ -104,3 +90,27 @@ void MainComponent::resized()
     keyboardComponent.setBounds(10, getHeight() - getHeight() * 0.2, getWidth() - 20, getHeight() * 0.2);
     midiInputsList.setBounds (100, 10, getWidth() * 0.5, 30);
 }
+
+void MainComponent::InitUI()
+{
+    // Configure UI
+    addAndMakeVisible(midiInputListLabel);
+    midiInputListLabel.setText("MIDI Input: ", dontSendNotification);
+    midiInputListLabel.attachToComponent(&midiInputsList, true);
+    
+    Array<String> midiInputsNames;
+    
+    const Array<MidiDeviceInfo>& midiInputs = juce::MidiInput::getAvailableDevices();
+    for (const MidiDeviceInfo& midiInput : midiInputs)
+    {
+        midiInputsNames.add(midiInput.name);
+    }
+    
+    midiInputsList.addItemList(midiInputsNames, 1);
+    //midiInputList.onChange = [](){/* set midi input */};
+    
+    addAndMakeVisible(midiInputsList);
+    midiInputsList.setTextWhenNoChoicesAvailable("No Midi Inputs Enabled");
+}
+
+#pragma endregion
