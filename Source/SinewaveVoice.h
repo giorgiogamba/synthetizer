@@ -27,8 +27,11 @@ public:
     
     void startNote(const int midiNoteNumber, const float velocity, SynthesiserSound* sound, int wheelPitchPosition) override;
     void stopNote(const float velocity, const bool bAllowTailOff) override;
+    void clearNote();
     
-    // #TODO implement render next block
+    void renderNextBlock(AudioSampleBuffer& outputBuffer, int startSample, int numSamples) override;
+    
+    
     
 private:
     

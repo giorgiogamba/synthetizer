@@ -52,3 +52,41 @@ void SinewaveVoice::stopNote(const float velocity, const bool bAllowTailOff)
         angleDelta = 0.0;
     }
 }
+
+void SinewaveVoice::renderNextBlock(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
+{
+    if (angleDelta == 0.0)
+        return;
+    
+    while (--numSamples >= 0)
+    {
+        const float currTailOff = tailOff > 0.0 ? tailOff : 1.0;
+        
+        const float currentSampleValue = sin(currentAngle) * level * currTailOff;
+        
+        for (int i = outputBuffer.getNumChannels(); --i >= 0;)
+        {
+            outputBuffer.addSample(i, startSample, currentSampleValue);
+        }
+        
+        currentAngle += angleDelta;
+        startSample++;
+        
+        if (currTailOff > 0.0)
+        {
+            tailOff *= 0.99;
+            
+            if (tailOff <= 0.005)
+            {
+                clearNote();
+                break;
+            }
+        }
+    }
+}
+
+void SinewaveVoice::clearNote()
+{
+    clearCurrentNote();
+    angleDelta = 0.0;
+}
