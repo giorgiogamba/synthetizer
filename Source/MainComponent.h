@@ -43,9 +43,13 @@ private:
     
     void InitUI();
     
+    void OnMIDISelectionChanged();
+    
 #pragma endregion
 
 #pragma region Keyboard
+    
+private:
     
     juce::MidiKeyboardState keyboardState;
     juce::MidiKeyboardComponent keyboardComponent;
@@ -54,6 +58,10 @@ private:
     
 #pragma region MIDI
 
+private:
+    
+    void SetMidiInput(const int Idx);
+    
     juce::ComboBox midiInputsList;
     juce::Label midiInputListLabel;
     int lastInputIndex;

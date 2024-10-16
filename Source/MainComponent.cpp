@@ -107,10 +107,42 @@ void MainComponent::InitUI()
     }
     
     midiInputsList.addItemList(midiInputsNames, 1);
-    //midiInputList.onChange = [](){/* set midi input */};
+    midiInputsList.onChange = [&](){ OnMIDISelectionChanged(); };
     
     addAndMakeVisible(midiInputsList);
     midiInputsList.setTextWhenNoChoicesAvailable("No Midi Inputs Enabled");
+}
+
+void MainComponent::OnMIDISelectionChanged()
+{
+    SetMidiInput(midiInputsList.getSelectedItemIndex());
+}
+
+#pragma endregion
+
+#pragma region MIDI
+
+void MainComponent::SetMidiInput(const int Idx)
+{
+    const Array<MidiDeviceInfo>& devices = MidiInput::getAvailableDevices();
+    
+    // Disconnect previous device
+    // #TODO Add audio source when it will be implemented
+    //deviceManager.removeAudioCallback(devices[lastInputIndex].identifier, audioSourcePlayer.getMidi)
+    
+    // Set new device
+    const MidiDeviceInfo& input = devices[Idx];
+    
+    if (!deviceManager.isMidiInputDeviceEnabled(input.identifier))
+    {
+        deviceManager.setMidiInputDeviceEnabled(input.identifier, true);
+    }
+    
+    // #TODO Add audio source when it will be implemented
+    //deviceManager.addMidiInputDeviceCallback(input.identifier, <#MidiInputCallback *callback#>)
+    midiInputsList.setSelectedId(Idx + 1, dontSendNotification);
+    
+    lastInputIndex = Idx;
 }
 
 #pragma endregion
