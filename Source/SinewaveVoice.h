@@ -29,9 +29,10 @@ public:
     void stopNote(const float velocity, const bool bAllowTailOff) override;
     void clearNote();
     
+    void pitchWheelMoved (int) override {}
+    void controllerMoved (int, int) override {}
+    
     void renderNextBlock(AudioSampleBuffer& outputBuffer, int startSample, int numSamples) override;
-    
-    
     
 private:
     
