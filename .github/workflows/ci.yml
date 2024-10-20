@@ -1,0 +1,31 @@
+name: synthetizer
+
+on:
+    # on every project update
+    push:
+    pull_request:
+    
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+
+          - name: Checkout
+            uses: actions/checkout@v3
+            
+          - name: Install dependencies
+            run: |
+              sudo apt-get update
+              sudo apt-get install -y ninja-build clang make
+                
+          - name: CMake files with Projucer
+            run: |
+              ./Projucer --resave synthetizer.jucer
+                
+          - name: Configure build
+            run : |
+              cmake -Bbuild -H. -GNinja
+                
+          - name: Build
+            run: |
+              cmake --build build
