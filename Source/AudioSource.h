@@ -31,6 +31,8 @@ public:
     
     void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override;
     
+    juce::MidiMessageCollector* getMIDIController() { return &midiCollector; }
+    
 private:
     
     juce::MidiKeyboardState& keyboardState;
