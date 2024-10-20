@@ -14,6 +14,9 @@
 
 class SinewaveSound : public juce::SynthesiserSound
 {
+    
+public:
+    
     SinewaveSound() {}
     
     bool appliesToNote (const int val) override;
