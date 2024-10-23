@@ -36,6 +36,10 @@ public:
     
 private:
     
+    void HandleSoundWithTailOff(AudioSampleBuffer& outputBuffer, int startSample, int numSamples);
+    
+    void HandleSoundWithoutTailOff(AudioSampleBuffer& outputBuffer, int startSample, int numSamples);
+    
     double currentAngle;
     
     /** Defines the space between two following points on the sinewave */
