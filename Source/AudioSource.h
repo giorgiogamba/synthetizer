@@ -31,7 +31,7 @@ public:
     
     void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override;
     
-    juce::MidiMessageCollector* getMIDIController() { return &midiCollector; }
+    juce::MidiMessageCollector* getMIDICollector() { return &midiCollector; }
     
 private:
     

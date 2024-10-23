@@ -58,30 +58,51 @@ void SinewaveVoice::renderNextBlock(AudioSampleBuffer& outputBuffer, int startSa
     if (angleDelta == 0.0)
         return;
     
+    if (tailOff > 0.0)
+    {
+        HandleSoundWithTailOff(outputBuffer, startSample, numSamples);
+    }
+    else
+    {
+        HandleSoundWithoutTailOff(outputBuffer, startSample, numSamples);
+    }
+}
+
+void SinewaveVoice::HandleSoundWithTailOff(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
+{
     while (--numSamples >= 0)
     {
-        const float currTailOff = tailOff > 0.0 ? tailOff : 1.0;
+        auto currentSample = (float) (std::sin (currentAngle) * level * tailOff);
         
-        const float currentSampleValue = sin(currentAngle) * level * currTailOff;
-        
-        for (int i = outputBuffer.getNumChannels(); --i >= 0;)
-        {
-            outputBuffer.addSample(i, startSample, currentSampleValue);
-        }
+        for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
+            outputBuffer.addSample (i, startSample, currentSample);
         
         currentAngle += angleDelta;
-        startSample++;
+        ++startSample;
         
-        if (currTailOff > 0.0)
+        tailOff *= 0.99;
+        
+        if (tailOff <= 0.005)
         {
-            tailOff *= 0.99;
+            clearCurrentNote();
             
-            if (tailOff <= 0.005)
-            {
-                clearNote();
-                break;
-            }
+            angleDelta = 0.0;
+            break;
         }
+    }
+}
+
+void SinewaveVoice::HandleSoundWithoutTailOff(AudioSampleBuffer& outputBuffer, int startSample, int numSamples)
+{
+    while (--numSamples >= 0)
+    {
+        auto currentSample = (float) (std::sin (currentAngle) * level);
+        
+        for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
+            outputBuffer.addSample (i, startSample, currentSample);
+        
+        currentAngle += angleDelta;
+        ++startSample;
     }
 }
 

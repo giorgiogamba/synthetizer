@@ -1,13 +1,20 @@
+
+#pragma region Includes
+
 #pragma once
 
 #include <JuceHeader.h>
+
+#include "AudioSource.h"
+
+#pragma endregion
 
 //==============================================================================
 /*
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent  : public juce::AudioAppComponent
+class MainComponent  : public juce::AudioAppComponent, private juce::Timer
 {
 
 #pragma region Lifecycle
@@ -21,13 +28,21 @@ private:
     
     void Init();
     
+    void timerCallback() override;
+    
 #pragma endregion
     
 #pragma region Audio
+    
+public:
 
     void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
     void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
+    
+private:
+    
+    SynthAudioSource synthAudioSource;
     
 #pragma endregion
     
