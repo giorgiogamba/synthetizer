@@ -5,7 +5,8 @@ using namespace juce;
 #pragma region Lifecycle
 
 MainComponent::MainComponent()
-    : keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
+    : synthAudioSource(keyboardState)
+    , keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     Init();
 }
@@ -20,8 +21,12 @@ void MainComponent::Init()
     // Make sure you set the size of the component after
     // you add any child components.
     setSize (800, 600);
+    
+    const int NumInputChannels = 0;
+    const int NumOutputChannels = 2;
+    setAudioChannels(NumInputChannels, NumOutputChannels);
 
-    /*// Some platforms require permissions to open input channels so request that here
+    // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
         && ! juce::RuntimePermissions::isGranted (juce::RuntimePermissions::recordAudio))
     {
@@ -32,11 +37,19 @@ void MainComponent::Init()
     {
         // Specify the number of input and output channels that we want to open
         setAudioChannels (2, 2);
-    }*/
+    }
     
     addAndMakeVisible(keyboardComponent);
     
     InitUI();
+    
+    startTimer(400);
+}
+
+void MainComponent::timerCallback()
+{
+    keyboardComponent.grabKeyboardFocus();
+    stopTimer();
 }
 
 #pragma endregion
@@ -45,32 +58,17 @@ void MainComponent::Init()
 
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    // This function will be called when the audio device is started, or when
-    // its settings (i.e. sample rate, block size, etc) are changed.
-
-    // You can use this function to initialise any resources you might need,
-    // but be careful - it will be called on the audio thread, not the GUI thread.
-
-    // For more details, see the help for AudioProcessor::prepareToPlay()
+    synthAudioSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    // Your audio-processing code goes here!
-
-    // For more details, see the help for AudioProcessor::getNextAudioBlock()
-
-    // Right now we are not producing any data, in which case we need to clear the buffer
-    // (to prevent the output of random noise)
-    bufferToFill.clearActiveBufferRegion();
+    synthAudioSource.getNextAudioBlock(bufferToFill);
 }
 
 void MainComponent::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
-
-    // For more details, see the help for AudioProcessor::releaseResources()
+    synthAudioSource.releaseResources();
 }
 
 #pragma endregion
@@ -111,6 +109,15 @@ void MainComponent::InitUI()
     
     addAndMakeVisible(midiInputsList);
     midiInputsList.setTextWhenNoChoicesAvailable("No Midi Inputs Enabled");
+    
+    for (auto input : midiInputs)
+    {
+        if (deviceManager.isMidiInputDeviceEnabled (input.identifier))
+        {
+            SetMidiInput(midiInputs.indexOf (input));
+            break;
+        }
+    }
 }
 
 void MainComponent::OnMIDISelectionChanged()
@@ -127,8 +134,7 @@ void MainComponent::SetMidiInput(const int Idx)
     const Array<MidiDeviceInfo>& devices = MidiInput::getAvailableDevices();
     
     // Disconnect previous device
-    // #TODO Add audio source when it will be implemented
-    //deviceManager.removeAudioCallback(devices[lastInputIndex].identifier, audioSourcePlayer.getMidi)
+    deviceManager.removeMidiInputDeviceCallback(devices[lastInputIndex].identifier, synthAudioSource.getMIDICollector());
     
     // Set new device
     const MidiDeviceInfo& input = devices[Idx];
@@ -138,8 +144,7 @@ void MainComponent::SetMidiInput(const int Idx)
         deviceManager.setMidiInputDeviceEnabled(input.identifier, true);
     }
     
-    // #TODO Add audio source when it will be implemented
-    //deviceManager.addMidiInputDeviceCallback(input.identifier, <#MidiInputCallback *callback#>)
+    deviceManager.addMidiInputDeviceCallback(input.identifier, synthAudioSource.getMIDICollector());
     midiInputsList.setSelectedId(Idx + 1, dontSendNotification);
     
     lastInputIndex = Idx;
