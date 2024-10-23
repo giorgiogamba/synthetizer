@@ -1,11 +1,30 @@
 #include "MainComponent.h"
 
-//==============================================================================
+using namespace juce;
+
+#pragma region Lifecycle
+
 MainComponent::MainComponent()
+    : synthAudioSource(keyboardState)
+    , keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
+{
+    Init();
+}
+
+MainComponent::~MainComponent()
+{
+    shutdownAudio();
+}
+
+void MainComponent::Init()
 {
     // Make sure you set the size of the component after
     // you add any child components.
     setSize (800, 600);
+    
+    const int NumInputChannels = 0;
+    const int NumOutputChannels = 2;
+    setAudioChannels(NumInputChannels, NumOutputChannels);
 
     // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
@@ -19,46 +38,43 @@ MainComponent::MainComponent()
         // Specify the number of input and output channels that we want to open
         setAudioChannels (2, 2);
     }
+    
+    addAndMakeVisible(keyboardComponent);
+    
+    InitUI();
+    
+    startTimer(400);
 }
 
-MainComponent::~MainComponent()
+void MainComponent::timerCallback()
 {
-    // This shuts down the audio device and clears the audio source.
-    shutdownAudio();
+    keyboardComponent.grabKeyboardFocus();
+    stopTimer();
 }
 
-//==============================================================================
+#pragma endregion
+
+#pragma region Audio
+
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    // This function will be called when the audio device is started, or when
-    // its settings (i.e. sample rate, block size, etc) are changed.
-
-    // You can use this function to initialise any resources you might need,
-    // but be careful - it will be called on the audio thread, not the GUI thread.
-
-    // For more details, see the help for AudioProcessor::prepareToPlay()
+    synthAudioSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    // Your audio-processing code goes here!
-
-    // For more details, see the help for AudioProcessor::getNextAudioBlock()
-
-    // Right now we are not producing any data, in which case we need to clear the buffer
-    // (to prevent the output of random noise)
-    bufferToFill.clearActiveBufferRegion();
+    synthAudioSource.getNextAudioBlock(bufferToFill);
 }
 
 void MainComponent::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
-
-    // For more details, see the help for AudioProcessor::releaseResources()
+    synthAudioSource.releaseResources();
 }
 
-//==============================================================================
+#pragma endregion
+
+#pragma region GUI
+
 void MainComponent::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
@@ -69,7 +85,69 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    // This is called when the MainContentComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    keyboardComponent.setBounds(10, getHeight() - getHeight() * 0.2, getWidth() - 20, getHeight() * 0.2);
+    midiInputsList.setBounds (100, 10, getWidth() * 0.5, 30);
 }
+
+void MainComponent::InitUI()
+{
+    // Configure UI
+    addAndMakeVisible(midiInputListLabel);
+    midiInputListLabel.setText("MIDI Input: ", dontSendNotification);
+    midiInputListLabel.attachToComponent(&midiInputsList, true);
+    
+    Array<String> midiInputsNames;
+    
+    const Array<MidiDeviceInfo>& midiInputs = juce::MidiInput::getAvailableDevices();
+    for (const MidiDeviceInfo& midiInput : midiInputs)
+    {
+        midiInputsNames.add(midiInput.name);
+    }
+    
+    midiInputsList.addItemList(midiInputsNames, 1);
+    midiInputsList.onChange = [&](){ OnMIDISelectionChanged(); };
+    
+    addAndMakeVisible(midiInputsList);
+    midiInputsList.setTextWhenNoChoicesAvailable("No Midi Inputs Enabled");
+    
+    for (auto input : midiInputs)
+    {
+        if (deviceManager.isMidiInputDeviceEnabled (input.identifier))
+        {
+            SetMidiInput(midiInputs.indexOf (input));
+            break;
+        }
+    }
+}
+
+void MainComponent::OnMIDISelectionChanged()
+{
+    SetMidiInput(midiInputsList.getSelectedItemIndex());
+}
+
+#pragma endregion
+
+#pragma region MIDI
+
+void MainComponent::SetMidiInput(const int Idx)
+{
+    const Array<MidiDeviceInfo>& devices = MidiInput::getAvailableDevices();
+    
+    // Disconnect previous device
+    deviceManager.removeMidiInputDeviceCallback(devices[lastInputIndex].identifier, synthAudioSource.getMIDICollector());
+    
+    // Set new device
+    const MidiDeviceInfo& input = devices[Idx];
+    
+    if (!deviceManager.isMidiInputDeviceEnabled(input.identifier))
+    {
+        deviceManager.setMidiInputDeviceEnabled(input.identifier, true);
+    }
+    
+    deviceManager.addMidiInputDeviceCallback(input.identifier, synthAudioSource.getMIDICollector());
+    midiInputsList.setSelectedId(Idx + 1, dontSendNotification);
+    
+    lastInputIndex = Idx;
+}
+
+#pragma endregion
